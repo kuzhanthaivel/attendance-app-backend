@@ -2,8 +2,11 @@ const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
 app.use(express.json());
-const mongoUrl = "mongodb+srv://kuzhanthaivel272:admin@cluster0.0vrv6.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+const jwt = require('jsonwebtoken');
 
+
+const mongoUrl = "mongodb+srv://kuzhanthaivel272:admin@cluster0.0vrv6.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+const JWT_SECRET = "kdfkdfyugwefyguidhjjdsuir74jw9347343";
 
 mongoose.connect(mongoUrl).then(()=> {
     console.log("mongodb successfully connected");
@@ -19,25 +22,29 @@ app.get("/", (req, res)=> {
 });
 
 
-app.post("/register",async(req, res)=> {
+app.post("/login-user",async(req, res)=> {
     const {username,password} = req.body;
 
     const oldUser = await User.findOne({username});
 
-    if (oldUser){
-        return res.send({data:"Username already exists"})
+    if (!oldUser){
+        return res.send({data:" user does not exists"})
     }
-    try {
-        await User.create ({
-            username,
-            password,
-        });
-        res.send({status:"ok",data:"user Created"})
-    } catch (error) {
-        res.send({status:"Error",data:error})
+    if (oldUser.password == password){
+        const token=jwt.sign({username: oldUser.password},JWT_SECRET);
+        if(res.status(201)){
+            return res.send({status: "ok", data: token})      
+         }
+         else {
+            return res.send({error: "error"});
+         } 
     }
 
 })
+
+
+
+
 
 app.listen(5001,()=>{
     console.log('Server is running on port 5001');
